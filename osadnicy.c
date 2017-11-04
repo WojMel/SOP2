@@ -64,10 +64,12 @@ Ustalenia techniczne dotyczące oddawania rozwiązania:
 #include <stdio.h>
 #include <stdlib.h> 
 #include <time.h> 
-#include <unistd.h>
 #include <pthread.h>
+
 const long MAX_DNI     = 365;
-const long CZAS_SPANIA = 0;
+struct timespec CZAS_SPANIA;
+time_t CZAS_SPANIA_sec = 0;
+long CZAS_SPANIA_nsec = 5L*1000000L;
 
 long max_dni = 0;
 pthread_mutex_t mutex_dni;
@@ -88,6 +90,8 @@ void thread_joinNfree(pthread_t* threads, long size);
 int main(int argc, char *argv[]){
    if( argc != 5 ) return 1;
    srand(time(NULL));
+   CZAS_SPANIA.tv_sec = CZAS_SPANIA_sec;
+   CZAS_SPANIA.tv_nsec = CZAS_SPANIA_nsec;
 
    long lmysliwi = strtol(argv[1], NULL, 10);
    long lkucharze = strtol(argv[2], NULL, 10);
@@ -158,7 +162,7 @@ void *mysliwy(void *vargp){
          return NULL;
       }
 
-      sleep(CZAS_SPANIA);
+      nanosleep(&CZAS_SPANIA, NULL);
    }
    return NULL;
 }
@@ -190,7 +194,7 @@ void *kucharz(void *vargp){
          return NULL;
       }
 
-      sleep(CZAS_SPANIA);
+      nanosleep(&CZAS_SPANIA, NULL);
    }
    return NULL;
 }
