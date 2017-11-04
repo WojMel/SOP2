@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
    long lmysliwi = strtol(argv[1], NULL, 10);
    long lkucharze = strtol(argv[2], NULL, 10);
    Zwierzyna = strtol(argv[3], NULL, 10);
-   Pozywienie = strtol(argv[3], NULL, 10);
+   Pozywienie = strtol(argv[4], NULL, 10);
 
    printf("--Status poczatkowy:\nLiczba mysliwych: %ld\nLiczba kucharzy: %ld\nLiczba zwierzyny: %ld\nLiczba pozywienia: %ld\n\n",lmysliwi,lkucharze,Zwierzyna,Pozywienie);
 
@@ -78,7 +78,8 @@ void thread_create(pthread_t* threads, long size, pthread_attr_t *attr, void*(*f
 }
 
 void *mysliwy(void *vargp){
-   for(int dzien =0; dzien < MAX_DNI; ++dzien){
+   int dzien;
+   for(dzien =0; dzien < MAX_DNI; ++dzien){
 
       if( rand() % 6 > rand() % 6 ){
          pthread_mutex_lock(&mutex_Zwierzyna);
@@ -93,19 +94,20 @@ void *mysliwy(void *vargp){
       }
       else{
          pthread_mutex_unlock(&mutex_Pozywienie);
-         pthread_mutex_lock(&mutex_dni);
-         if( dzien > max_dni ) max_dni = dzien;
-         pthread_mutex_unlock(&mutex_dni);
-         return NULL;
+         break;
       }
 
       nanosleep(&CZAS_SPANIA, NULL);
-   }
+   }   
+   pthread_mutex_lock(&mutex_dni);
+   if( dzien > max_dni ) max_dni = dzien;
+   pthread_mutex_unlock(&mutex_dni);
    return NULL;
 }
 
 void *kucharz(void *vargp){
-   for(int dzien =0; dzien < MAX_DNI; ++dzien){
+   int dzien;
+   for(dzien =0; dzien < MAX_DNI; ++dzien){
 
       pthread_mutex_lock(&mutex_Zwierzyna);
       if( Zwierzyna > 0 ){
@@ -125,13 +127,13 @@ void *kucharz(void *vargp){
       }
       else{
          pthread_mutex_unlock(&mutex_Pozywienie);
-         pthread_mutex_lock(&mutex_dni);
-         if( dzien > max_dni ) max_dni = dzien;
-         pthread_mutex_unlock(&mutex_dni);
-         return NULL;
+         break;
       }
 
       nanosleep(&CZAS_SPANIA, NULL);
    }
+   pthread_mutex_lock(&mutex_dni);
+   if( dzien > max_dni ) max_dni = dzien;
+   pthread_mutex_unlock(&mutex_dni);
    return NULL;
 }
