@@ -69,6 +69,9 @@ Ustalenia techniczne dotyczące oddawania rozwiązania:
 const long MAX_DNI     = 365;
 const long CZAS_SPANIA = 0;
 
+long max_dni = 0;
+pthread_mutex_t mutex_dni;
+
 long Zwierzyna  = 0;
 long Pozywienie = 0;
 pthread_mutex_t mutex_Zwierzyna;
@@ -91,12 +94,15 @@ int main(int argc, char *argv[]){
    Zwierzyna = strtol(argv[3], NULL, 10);
    Pozywienie = strtol(argv[3], NULL, 10);
 
+   printf("--Status poczatkowy:\nLiczba mysliwych: %ld\nLiczba kucharzy: %ld\nLiczba zwierzyny: %ld\nLiczba pozywienia: %ld\n\n",lmysliwi,lkucharze,Zwierzyna,Pozywienie);
+
    pthread_attr_t attr;
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
    pthread_mutex_init(&mutex_Zwierzyna, NULL);
    pthread_mutex_init(&mutex_Pozywienie, NULL);
+   pthread_mutex_init(&mutex_dni, NULL);
 
 
    pthread_t *watki_mysliwi =  (pthread_t *)malloc(lmysliwi*sizeof(pthread_t));
@@ -110,6 +116,9 @@ int main(int argc, char *argv[]){
    thread_joinNfree(watki_kucharze, lkucharze);
    pthread_mutex_destroy(&mutex_Zwierzyna);
    pthread_mutex_destroy(&mutex_Pozywienie);
+   pthread_mutex_destroy(&mutex_dni);
+
+   printf("--Status koncowy:\nLiczba mysliwych: 0\nLiczba kucharzy: 0\nLiczba zwierzyny: %ld\nLiczba pozywienia: %ld\nOsada przetrwala %ld dni.\n",Zwierzyna,Pozywienie,max_dni);
 
    return 0;
 }
@@ -143,6 +152,9 @@ void *mysliwy(void *vargp){
       }
       else{
          pthread_mutex_unlock(&mutex_Pozywienie);
+         pthread_mutex_lock(&mutex_dni);
+         if( dzien > max_dni ) max_dni = dzien;
+         pthread_mutex_unlock(&mutex_dni);
          return NULL;
       }
 
@@ -172,6 +184,9 @@ void *kucharz(void *vargp){
       }
       else{
          pthread_mutex_unlock(&mutex_Pozywienie);
+         pthread_mutex_lock(&mutex_dni);
+         if( dzien > max_dni ) max_dni = dzien;
+         pthread_mutex_unlock(&mutex_dni);
          return NULL;
       }
 
